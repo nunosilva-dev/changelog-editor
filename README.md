@@ -1,4 +1,4 @@
-# SIS Changelog Editor
+# Changelog Editor
 
 A developer-centric desktop application for managing and maintaining `changelog.md` files across modular projects. Built with **Electron** and **TailwindCSS**, it bridges the gap between structured input and raw Markdown editing.
 
