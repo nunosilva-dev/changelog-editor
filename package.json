@@ -8,6 +8,12 @@
     "start": "electron .",
     "build": "electron-builder"
   },
+  "publish": [
+    {
+      "provider": "github",
+      "vPrefixedTagName": false
+    }
+  ],
   "build": {
     "appId": "com.nunosilva.changelogeditor",
     "productName": "Changelog Editor",
