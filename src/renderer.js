@@ -158,59 +158,34 @@ function generateMarkdown() {
     const version = document.getElementById('versionTag').value.trim() || "Unreleased";
     const versionHeader = `## [${version}]`;
     const newEntries = {};
-
     categories.forEach(cat => {
         const val = document.getElementById(`input-${cat}`).value.trim();
-        if (val) {
-            newEntries[cat] = val.split('\n')
-                .map(l => (l.startsWith('- ') || l.startsWith('  - ')) ? l : `- ${l}`)
-                .join('\n');
-        }
+        if (val) newEntries[cat] = val.split('\n').map(l => l.startsWith('- ') || l.startsWith('  - ') ? l : `- ${l}`).join('\n');
     });
 
-    let archive = "";
     if (existingMD.includes(versionHeader)) {
-        const parts = existingMD.split(versionHeader);
-        const contentAfterHeader = parts[1] || "";
-        const nextVersionIndex = contentAfterHeader.search(/\n## \[/);
-
-        if (nextVersionIndex !== -1) {
-            archive = contentAfterHeader.substring(nextVersionIndex).trim();
-        }
-    } else {
-        archive = existingMD.trim();
-    }
-
-    let activeBlock = `${versionHeader}\n`;
-
-    categories.forEach(cat => {
-        const subHeader = `### ${cat}`;
-        let catContent = newEntries[cat] || "";
-
-        if (existingMD.includes(versionHeader) && existingMD.includes(subHeader)) {
-            const regex = new RegExp(`${subHeader}\\n([\\s\\S]*?)(?=\\n###|\\n##|\\n---|$)`);
-            const match = existingMD.match(regex);
-            const oldLines = match ? match[1].trim() : "";
-
-            if (oldLines && catContent && !oldLines.includes(catContent)) {
-                catContent = oldLines + "\n" + catContent;
-            } else if (oldLines && !catContent) {
-                catContent = oldLines;
+        let sections = existingMD.split(/(?=\n## \[)/);
+        sections = sections.map(section => {
+            if (section.trim().startsWith(versionHeader)) {
+                let updated = section;
+                categories.forEach(cat => {
+                    if (newEntries[cat]) {
+                        const sub = `### ${cat}`;
+                        updated = updated.includes(sub) ? updated.replace(sub, `${sub}\n${newEntries[cat]}`) : updated.trimEnd() + `\n\n${sub}\n${newEntries[cat]}\n`;
+                    }
+                });
+                return updated;
             }
-        }
-
-        if (catContent) {
-            activeBlock += `\n${subHeader}\n${catContent}\n`;
-        }
-    });
-
-    archive = archive.replace(/^[\s\-\*]+/, '').trim();
-
-    if (archive.length > 0) {
-        return activeBlock.trimEnd() + "\n\n---\n\n" + archive;
+            return section;
+        });
+        return sections.join('');
+    } else {
+        let block = `${versionHeader}\n\n`;
+        categories.forEach(cat => {
+            if (newEntries[cat]) block += `### ${cat}\n${newEntries[cat]}\n\n`;
+        });
+        return block + (existingMD ? existingMD : "");
     }
-
-    return activeBlock.trimEnd();
 }
 
 async function publishChanges() {
