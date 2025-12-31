@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 h-screen flex flex-col font-sans overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-200">
+
+<div class="titlebar"></div>
+
+<div id="publishModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="modal-backdrop absolute inset-0"></div>
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8 relative no-drag">
+        <h3 class="text-xl font-black text-slate-800 dark:text-white mb-2">Publish Changes?</h3>
+        <p class="text-slate-500 dark:text-slate-400 text-sm mb-8 leading-relaxed">This writes directly to the local
+            file system.</p>
+        <div class="flex gap-3">
+            <button id="cancelModal"
+                    class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                Cancel
+            </button>
+            <button id="confirmPublish"
+                    class="flex-1 px-4 py-3 rounded-xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg transition">
+                Publish
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toast"
+     class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 z-50 pointer-events-none">
+    <div class="bg-emerald-500 rounded-full p-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24"
+             stroke="currentColor" stroke-width="3">
+            <path d="M5 13l4 4L19 7"/>
+        </svg>
+    </div>
+    <span class="text-xs font-black uppercase tracking-widest">Saved Successfully</span>
+</div>
+
+<header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3 pt-8 flex justify-between items-center z-20 shadow-sm transition-colors">
+    <div class="flex items-center gap-4">
+        <div class="bg-indigo-600 text-white p-2 rounded-xl">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5">
+                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+        </div>
+        <h1 class="text-lg font-black tracking-tight leading-none text-slate-800 dark:text-white uppercase italic">
+            CHANGELOG <span class="text-indigo-600 font-black not-italic"> EDITOR</span></h1>
+    </div>
+    <div class="flex items-center gap-3 no-drag">
+        <button id="themeToggle"
+                class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-slate-600 dark:text-slate-400">
+            <span id="themeIcon" class="text-lg">🌙</span>
+        </button>
+        <button id="btnOpen"
+                class="bg-slate-900 dark:bg-indigo-600 hover:opacity-80 text-white text-[10px] font-black px-6 py-2.5 rounded-full transition-all flex items-center gap-2 uppercase tracking-widest shadow-lg">
+            📂 Open Folder
+        </button>
+    </div>
+</header>
+
+<main class="flex flex-1 overflow-hidden">
+    <aside class="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-colors">
+        <div class="p-4 border-b dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex justify-between items-center">
+            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono">Project Hierarchy</span>
+            <button onclick="refreshTree()" class="text-[10px] text-indigo-600 font-bold hover:underline">RESCAN
+            </button>
+        </div>
+        <div id="treeContainer" class="flex-1 overflow-y-auto custom-scroll p-3 text-sm"></div>
+    </aside>
+
+    <section class="flex-1 flex flex-col overflow-hidden relative">
+        <div id="editorUI" class="hidden h-full flex flex-col">
+            <div class="px-8 py-5 bg-white dark:bg-slate-900 border-b dark:border-slate-800 flex justify-between items-center">
+                <div>
+                    <span id="activeItemPath"
+                          class="text-[10px] font-bold text-indigo-500 uppercase font-mono tracking-widest opacity-80 mb-1 block"></span>
+                    <h2 id="activeItemName" class="text-2xl font-black text-slate-800 dark:text-white tracking-tighter">
+                        Module</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="toggleEditMode"
+                            class="text-[10px] font-black text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition uppercase tracking-widest">
+                        Raw Editor
+                    </button>
+                    <input type="text" id="versionTag" placeholder="1.2.3"
+                           class="border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-lg px-4 py-2 text-sm font-black outline-none w-36">
+                    <button id="btnOpenModal"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-xl font-black shadow-xl shadow-indigo-100 dark:shadow-none transition-all text-xs uppercase tracking-widest">
+                        Publish
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 flex overflow-hidden">
+                <div id="builderView" class="w-7/12 p-8 overflow-y-auto custom-scroll bg-white dark:bg-slate-950">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="input-card p-4 rounded-2xl bg-emerald-50/20 dark:bg-emerald-950/20">
+                            <label class="text-[10px] font-black text-emerald-600 uppercase mb-3 block">🚀 Added</label>
+                            <textarea id="input-Added" rows="4"
+                                      class="w-full text-sm bg-transparent outline-none resize-none dark:text-slate-300"
+                                      placeholder="New features..."></textarea>
+                        </div>
+                        <div class="input-card p-4 rounded-2xl bg-blue-50/20 dark:bg-blue-950/20">
+                            <label class="text-[10px] font-black text-blue-600 uppercase mb-3 block">🔄 Changed</label>
+                            <textarea id="input-Changed" rows="4"
+                                      class="w-full text-sm bg-transparent outline-none resize-none dark:text-slate-300"
+                                      placeholder="Updates..."></textarea>
+                        </div>
+                        <div class="input-card p-4 rounded-2xl bg-amber-50/20 dark:bg-amber-950/20">
+                            <label class="text-[10px] font-black text-amber-600 uppercase mb-3 block">🔧 Fixed</label>
+                            <textarea id="input-Fixed" rows="4"
+                                      class="w-full text-sm bg-transparent outline-none resize-none dark:text-slate-300"
+                                      placeholder="Bug fixes..."></textarea>
+                        </div>
+                        <div class="input-card p-4 rounded-2xl bg-red-50/20 dark:bg-red-950/20">
+                            <label class="text-[10px] font-black text-red-600 uppercase mb-3 block">🗑️ Removed</label>
+                            <textarea id="input-Removed" rows="4"
+                                      class="w-full text-sm bg-transparent outline-none resize-none dark:text-slate-300"
+                                      placeholder="Cleanup..."></textarea>
+                        </div>
+                        <div class="input-card p-4 rounded-2xl bg-purple-50/20 dark:bg-purple-950/20">
+                            <label class="text-[10px] font-black text-purple-600 uppercase mb-3 block">⚠️
+                                Deprecated</label>
+                            <textarea id="input-Deprecated" rows="4"
+                                      class="w-full text-sm bg-transparent outline-none resize-none dark:text-slate-300"
+                                      placeholder="Old features..."></textarea>
+                        </div>
+                        <div class="input-card p-4 rounded-2xl bg-rose-50/20 dark:bg-rose-950/20">
+                            <label class="text-[10px] font-black text-rose-600 uppercase mb-3 block">🛡️ Security</label>
+                            <textarea id="input-Security" rows="4"
+                                      class="w-full text-sm bg-transparent outline-none resize-none dark:text-slate-300"
+                                      placeholder="Fixes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div id="rawView" class="hidden w-7/12 bg-slate-900 dark:bg-slate-950 p-0 overflow-hidden">
+                    <textarea id="rawEditor"
+                              class="w-full h-full p-10 bg-transparent text-indigo-300 font-mono text-sm leading-relaxed outline-none resize-none"></textarea>
+                </div>
+                <div class="w-5/12 bg-slate-50 dark:bg-slate-900/50 border-l border-slate-200 dark:border-slate-800 p-10 overflow-y-auto custom-scroll">
+                    <div id="historyPreview" class="prose prose-slate prose-sm max-w-none dark:prose-invert"></div>
+                </div>
+            </div>
+        </div>
+        <div id="emptyState"
+             class="flex-1 flex flex-col items-center justify-center text-slate-300 dark:text-slate-600 bg-white dark:bg-slate-950">
+            <h2 class="text-xl font-black uppercase tracking-tighter">No Folder Open</h2>
+            <p class="text-sm mt-1">Select your root project to begin.</p>
+        </div>
+    </section>
+</main>
+
+<script src="renderer.js"></script>
+</body>
+</html>
