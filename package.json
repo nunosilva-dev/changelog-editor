@@ -1,9 +1,33 @@
 {
   "name": "changelog-editor",
   "version": "1.0.0",
+  "description": "A developer-friendly tool for managing changelogs",
+  "author": "Nuno Silva",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "com.nunosilva.changelogeditor",
+    "productName": "Changelog Editor",
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
   },
   "devDependencies": {
     "electron": "^28.0.0",
