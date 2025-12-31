@@ -16,7 +16,10 @@ A developer-centric desktop application for managing and maintaining `changelog.
 ## 🚀 Installation
 
 ### macOS (Homebrew)
-*Coming soon via custom tap.*
+```bash
+    brew tap nunosilva-dev/changelog-editor https://github.com/nunosilva-dev/changelog-editor
+    brew install --cask changelog-editor
+```
 
 ### Windows & Linux
 Check the [Releases](https://github.com/nunosilva-dev/changelog-editor/releases) page for the latest `.exe` and `.AppImage` files.
