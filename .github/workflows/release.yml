@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -27,16 +27,7 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Build & Publish (Ubuntu)
-        uses: samuelmeuli/action-electron-builder@v1
-        if: matrix.os == 'ubuntu-latest'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          release: true
-
-      - name: Build Only (Mac & Windows)
-        uses: samuelmeuli/action-electron-builder@v1
-        if: matrix.os != 'ubuntu-latest'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          release: false
+      - name: Build and Publish
+        run: npm run build -- --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
