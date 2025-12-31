@@ -27,7 +27,7 @@ If you want to run the project locally or contribute:
 
 1.  **Clone the repository**
     ```bash
-    git clone [https://github.com/nunosilva-dev/changelog-editor.git](https://github.com/nunosilva-dev/changelog-editor.git)
+    git clone https://github.com/nunosilva-dev/changelog-editor.git
     cd changelog-editor
     ```
 
