@@ -1,6 +1,6 @@
 cask "changelog-editor" do
   version "1.0.0"
-  sha256 "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5"
+  sha256 "1d09d04172f50a12f3a18371e1225b91ae7e8ff8261853d04dfc2b4e4ca97468"
 
   url "https://github.com/nunosilva-dev/changelog-editor/releases/download/release/#{version}/Changelog-Editor-#{version}-arm64.dmg"
   name "Changelog Editor"
