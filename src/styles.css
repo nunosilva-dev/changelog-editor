@@ -107,3 +107,31 @@
 .no-drag {
     -webkit-app-region: no-drag;
 }
+
+#historyPreview a {
+    color: #4f46e5;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+#historyPreview a:hover {
+    color: #4338ca;
+}
+
+.dark #historyPreview a {
+    color: #818cf8;
+}
+
+.dark #historyPreview a:hover {
+    color: #a5b4fc;
+}
+
+.arrow-icon {
+    transition: transform 0.2s ease;
+}
+
+.arrow-icon.expanded {
+    transform: rotate(90deg);
+}

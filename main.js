@@ -1,6 +1,6 @@
-const {app, BrowserWindow, ipcMain, dialog} = require('electron');
+const {app, BrowserWindow, ipcMain, dialog, shell} = require('electron');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -24,19 +24,27 @@ ipcMain.handle('select-folder', async () => {
 });
 
 ipcMain.handle('read-file', async (event, filePath) => {
-    if (fs.existsSync(filePath)) return fs.readFileSync(filePath, 'utf-8');
-    return "";
+    try {
+        return await fs.readFile(filePath, 'utf-8');
+    } catch (e) {
+        return "";
+    }
 });
 
 ipcMain.handle('write-file', async (event, {filePath, content}) => {
-    fs.writeFileSync(filePath, content);
+    await fs.writeFile(filePath, content, 'utf-8');
     return true;
 });
 
 ipcMain.handle('scan-dir', async (event, dirPath) => {
-    return fs.readdirSync(dirPath, {withFileTypes: true})
+    const dirents = await fs.readdir(dirPath, {withFileTypes: true});
+    return dirents
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name);
+});
+
+ipcMain.handle('open-external', async (event, url) => {
+    await shell.openExternal(url);
 });
 
 app.whenReady().then(createWindow);
