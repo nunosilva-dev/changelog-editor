@@ -127,3 +127,11 @@
 .dark #historyPreview a:hover {
     color: #a5b4fc;
 }
+
+.arrow-icon {
+    transition: transform 0.2s ease;
+}
+
+.arrow-icon.expanded {
+    transform: rotate(90deg);
+}
