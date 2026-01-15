@@ -1,5 +1,5 @@
 cask "changelog-editor" do
-  version "1.0.0"
+  version "1.1.0"
   sha256 "f78e1804f608583abb486349328e17da817b411519677486cbbda3457ee98cd8"
 
   url "https://github.com/nunosilva-dev/changelog-editor/releases/download/release/#{version}/Changelog-Editor-#{version}-arm64.dmg"

@@ -85,7 +85,7 @@ window.refreshTree = async function () {
     if (!currentRootPath) return;
     treeContainer.innerHTML = "";
     const folderName = currentRootPath.split('/').pop() || currentRootPath;
-    const rootNode = await createTreeNode(currentRootPath, `📦 ${folderName}`, true);
+    const rootNode = await createTreeNode(currentRootPath, `${folderName}`, true);
     treeContainer.appendChild(rootNode);
 }
 
@@ -97,33 +97,75 @@ function getLatestVersion(md) {
 
 async function createTreeNode(fullPath, displayName, isRoot = false) {
     const wrapper = document.createElement('div');
+
     const row = document.createElement('div');
-    row.className = `tree-item flex items-center py-2.5 px-4 rounded-xl cursor-pointer transition-all mb-1 ${isRoot ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 mb-2' : 'text-slate-500'}`;
-    row.innerHTML = `<span class="truncate text-[12px] font-bold uppercase tracking-tight">${displayName}</span>`;
+    row.className = `tree-item group flex items-center py-1.5 px-2 rounded-md cursor-pointer transition-all mb-0.5 ${isRoot ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400'}`;
 
-    const children = document.createElement('div');
-    children.className = "ml-6 border-l-2 border-slate-100 dark:border-slate-800 hidden";
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = "ml-4 border-l border-slate-200 dark:border-slate-800 pl-1 hidden";
 
-    row.onclick = async (e) => {
-        e.stopPropagation();
-        document.querySelectorAll('.selected-node').forEach(n => n.classList.remove('selected-node'));
-        row.classList.add('selected-node');
+    const arrowIcon = document.createElement('span');
+    arrowIcon.className = "arrow-icon w-4 h-4 flex items-center justify-center mr-1 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors";
+    arrowIcon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3">
+            <path d="M9 18l6-6-6-6"/>
+        </svg>
+    `;
 
-        if (children.classList.contains('hidden')) {
-            children.classList.remove('hidden');
-            if (children.innerHTML === "") {
+    const folderIcon = document.createElement('span');
+    folderIcon.className = "mr-2 opacity-70";
+    folderIcon.innerText = isRoot ? "📦" : "📁";
+
+    const label = document.createElement('span');
+    label.className = "truncate text-[13px] tracking-tight select-none flex-1";
+    label.innerText = displayName;
+
+    if (!isRoot) row.appendChild(arrowIcon);
+    row.appendChild(folderIcon);
+    row.appendChild(label);
+
+    const toggleNode = async (forceOpen = false) => {
+        const isHidden = childrenContainer.classList.contains('hidden');
+
+        if (forceOpen && !isHidden) return;
+
+        if (isHidden) {
+            childrenContainer.classList.remove('hidden');
+            arrowIcon.classList.add('expanded');
+            folderIcon.innerText = isRoot ? "📦" : "📂";
+
+            if (childrenContainer.innerHTML === "") {
                 const folders = await window.electronAPI.scanDir(fullPath);
+                folders.sort();
                 for (const name of folders) {
-                    children.appendChild(await createTreeNode(`${fullPath}/${name}`, name));
+                    childrenContainer.appendChild(await createTreeNode(`${fullPath}/${name}`, name));
                 }
             }
         } else {
-            children.classList.add('hidden');
+            childrenContainer.classList.add('hidden');
+            arrowIcon.classList.remove('expanded');
+            folderIcon.innerText = isRoot ? "📦" : "📁";
         }
+    };
+
+    arrowIcon.onclick = (e) => {
+        e.stopPropagation();
+        toggleNode();
+    };
+
+    row.onclick = async (e) => {
+        e.stopPropagation();
+
+        document.querySelectorAll('.selected-node').forEach(n => n.classList.remove('selected-node', 'bg-indigo-50', 'dark:bg-indigo-900/30'));
+
+        row.classList.add('selected-node', 'bg-indigo-50', 'dark:bg-indigo-900/30');
+
+        await toggleNode(true);
+
         loadFolder(fullPath);
     };
 
-    wrapper.append(row, children);
+    wrapper.append(row, childrenContainer);
     return wrapper;
 }
 
