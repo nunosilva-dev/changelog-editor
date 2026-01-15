@@ -203,3 +203,12 @@ function showToast() {
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
+
+document.getElementById('historyPreview').addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+
+    if (link && link.href) {
+        event.preventDefault();
+        window.electronAPI.openExternal(link.href);
+    }
+});
