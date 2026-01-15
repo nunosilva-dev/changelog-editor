@@ -3,6 +3,7 @@ let currentModulePath = "";
 let existingMD = "";
 let editMode = 'builder';
 const categories = ["Added", "Changed", "Fixed", "Removed", "Deprecated", "Security"];
+let currentLayout = 'split';
 
 const themeToggle = document.getElementById('themeToggle');
 const themeIcon = document.getElementById('themeIcon');
@@ -47,7 +48,7 @@ textareas.forEach(area => {
 });
 
 document.getElementById('btnOpen').onclick = async () => {
-    const path = await window.electronAPI.selectFolder();
+    const path = await globalThis.electronAPI.selectFolder();
     if (!path) return;
     currentRootPath = path;
     await refreshTree();
@@ -63,25 +64,21 @@ document.getElementById('confirmPublish').onclick = async () => {
 };
 
 document.getElementById('toggleEditMode').onclick = () => {
-    const builder = document.getElementById('builderView');
-    const raw = document.getElementById('rawView');
     const btn = document.getElementById('toggleEditMode');
     if (editMode === 'builder') {
         editMode = 'raw';
-        builder.classList.add('hidden');
-        raw.classList.remove('hidden');
-        btn.innerText = "Builder Mode";
+        btn.innerText = "Builder";
+        document.getElementById('rawEditor').value = generateMarkdown();
     } else {
         editMode = 'builder';
-        raw.classList.add('hidden');
-        builder.classList.remove('hidden');
-        btn.innerText = "Raw Editor";
+        btn.innerText = "RAW";
         existingMD = document.getElementById('rawEditor').value;
         renderContent();
     }
+    setLayout(currentLayout);
 };
 
-window.refreshTree = async function () {
+globalThis.refreshTree = async function () {
     if (!currentRootPath) return;
     treeContainer.innerHTML = "";
     const folderName = currentRootPath.split('/').pop() || currentRootPath;
@@ -135,7 +132,7 @@ async function createTreeNode(fullPath, displayName, isRoot = false) {
             folderIcon.innerText = isRoot ? "📦" : "📂";
 
             if (childrenContainer.innerHTML === "") {
-                const folders = await window.electronAPI.scanDir(fullPath);
+                const folders = await globalThis.electronAPI.scanDir(fullPath);
                 folders.sort();
                 for (const name of folders) {
                     childrenContainer.appendChild(await createTreeNode(`${fullPath}/${name}`, name));
@@ -177,14 +174,13 @@ async function loadFolder(path) {
 
     activeItemName.innerText = folderName;
 
-    const displayPath = (rootFolderName + relativePath).split('/').filter(Boolean).join(' / ');
-    activeItemPath.innerText = displayPath;
+    activeItemPath.innerText = (rootFolderName + relativePath).split('/').filter(Boolean).join(' / ');
 
     editorUI.classList.remove('hidden');
     emptyState.classList.add('hidden');
 
     categories.forEach(cat => document.getElementById(`input-${cat}`).value = "");
-    existingMD = await window.electronAPI.readFile(`${path}/changelog.md`);
+    existingMD = await globalThis.electronAPI.readFile(`${path}/changelog.md`);
 
     const latestVer = getLatestVersion(existingMD);
     document.getElementById('versionTag').value = latestVer || "";
@@ -226,14 +222,14 @@ function generateMarkdown() {
         categories.forEach(cat => {
             if (newEntries[cat]) block += `### ${cat}\n${newEntries[cat]}\n\n`;
         });
-        return block + (existingMD ? existingMD : "");
+        return block + (existingMD || "");
     }
 }
 
 async function publishChanges() {
     const filePath = `${currentModulePath}/changelog.md`;
     let finalMD = editMode === 'raw' ? document.getElementById('rawEditor').value : generateMarkdown();
-    await window.electronAPI.writeFile(filePath, finalMD);
+    await globalThis.electronAPI.writeFile(filePath, finalMD);
     existingMD = finalMD;
     if (editMode === 'builder') categories.forEach(cat => document.getElementById(`input-${cat}`).value = "");
     renderContent();
@@ -249,8 +245,53 @@ function showToast() {
 document.getElementById('historyPreview').addEventListener('click', (event) => {
     const link = event.target.closest('a');
 
-    if (link && link.href) {
+    if (link?.href) {
         event.preventDefault();
-        window.electronAPI.openExternal(link.href);
+        globalThis.electronAPI.openExternal(link.href);
     }
 });
+
+globalThis.setLayout = function (mode) {
+    currentLayout = mode;
+    const builderView = document.getElementById('builderView');
+    const rawView = document.getElementById('rawView');
+    const previewContainer = document.getElementById('previewContainer');
+    const btns = document.querySelectorAll('.layout-btn');
+
+    btns.forEach((btn, index) => {
+        const isSelected = (mode === 'editor' && index === 0) ||
+            (mode === 'split' && index === 1) ||
+            (mode === 'preview' && index === 2);
+
+        if (isSelected) {
+            btn.className = "layout-btn text-indigo-600 bg-white dark:bg-slate-600 shadow-sm p-1.5 rounded-md transition ring-1 ring-slate-200 dark:ring-slate-500";
+        } else {
+            btn.className = "layout-btn p-1.5 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition";
+        }
+    });
+
+    builderView.classList.remove('w-7/12', 'w-full', 'hidden');
+    rawView.classList.remove('w-7/12', 'w-full', 'hidden');
+    previewContainer.classList.remove('w-5/12', 'w-full', 'border-l', 'hidden');
+
+    if (mode === 'preview') {
+        builderView.classList.add('hidden');
+        rawView.classList.add('hidden');
+        previewContainer.classList.add('w-full');
+    } else {
+        const widthClass = mode === 'split' ? 'w-7/12' : 'w-full';
+        if (editMode === 'raw') {
+            rawView.classList.add(widthClass);
+            builderView.classList.add('hidden');
+        } else {
+            builderView.classList.add(widthClass);
+            rawView.classList.add('hidden');
+        }
+
+        if (mode === 'split') {
+            previewContainer.classList.add('w-5/12', 'border-l');
+        } else {
+            previewContainer.classList.add('hidden');
+        }
+    }
+}

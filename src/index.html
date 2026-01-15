@@ -84,15 +84,45 @@
                     <h2 id="activeItemName" class="text-2xl font-black text-slate-800 dark:text-white tracking-tighter">
                         Module</h2>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+
+                    <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-lg flex items-center mr-2 border border-slate-200 dark:border-slate-700">
+                        <button onclick="setLayout('editor')" title="Editor Only"
+                                class="layout-btn p-1.5 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="9" y1="3" x2="9" y2="21"/>
+                            </svg>
+                        </button>
+                        <button onclick="setLayout('split')" title="Split View"
+                                class="layout-btn text-indigo-600 bg-white dark:bg-slate-700 shadow-sm p-1.5 rounded-md transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="12" y1="3" x2="12" y2="21"/>
+                            </svg>
+                        </button>
+                        <button onclick="setLayout('preview')" title="Preview Only"
+                                class="layout-btn p-1.5 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="15" y1="3" x2="15" y2="21"/>
+                            </svg>
+                        </button>
+                    </div>
+
                     <button id="toggleEditMode"
-                            class="text-[10px] font-black text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition uppercase tracking-widest">
-                        Raw Editor
+                            class="text-[10px] font-black text-slate-500 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition uppercase tracking-widest">
+                        RAW
                     </button>
+
                     <input type="text" id="versionTag" placeholder="1.2.3"
-                           class="border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-lg px-4 py-2 text-sm font-black outline-none w-36">
+                           class="border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-lg px-3 py-2 text-sm font-black outline-none w-28 text-center">
+
                     <button id="btnOpenModal"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-xl font-black shadow-xl shadow-indigo-100 dark:shadow-none transition-all text-xs uppercase tracking-widest">
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl font-black shadow-lg shadow-indigo-200 dark:shadow-none transition-all text-xs uppercase tracking-widest">
                         Publish
                     </button>
                 </div>
@@ -144,7 +174,8 @@
                     <textarea id="rawEditor"
                               class="w-full h-full p-10 bg-transparent text-indigo-300 font-mono text-sm leading-relaxed outline-none resize-none"></textarea>
                 </div>
-                <div class="w-5/12 bg-slate-50 dark:bg-slate-900/50 border-l border-slate-200 dark:border-slate-800 p-10 overflow-y-auto custom-scroll">
+                <div id="previewContainer"
+                     class="w-5/12 bg-slate-50 dark:bg-slate-900/50 border-l border-slate-200 dark:border-slate-800 p-10 overflow-y-auto custom-scroll">
                     <div id="historyPreview" class="prose prose-slate prose-sm max-w-none dark:prose-invert"></div>
                 </div>
             </div>
